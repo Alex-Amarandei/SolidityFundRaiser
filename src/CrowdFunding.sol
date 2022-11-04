@@ -111,7 +111,7 @@ contract CrowdFunding is BaseFunding {
         }
         // Anyone that contributed can withdraw while in the Unfunded state
         else if (fundingStatus == Status.Unfunded) {
-            contributionOf[msg.sender] -= _amount; // solhint-disable-line
+            contributionOf[msg.sender] -= _amount; 
             payable(msg.sender).transfer(_amount);
         }
         // Nobody can withdraw while in the Funded state
