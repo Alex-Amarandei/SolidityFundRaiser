@@ -37,6 +37,9 @@ contract CrowdFunding is BaseFunding {
     /// @notice A mapping between the contributors and their respective contributions
     mapping(address => uint256) private contributionOf;
 
+    /// @notice A mapping between the address of a contributor and their respective index in the contributors array
+    mapping(address => uint256) private contributorAt;
+
     /// @notice The current status of the fund raiser
     Status private fundingStatus;
 
@@ -71,6 +74,7 @@ contract CrowdFunding is BaseFunding {
         if (contributionOf[msg.sender] == 0) {
             Contributor memory contributor = Contributor(msg.sender, _firstName, _lastName);
             contributors.push(contributor);
+            contributorAt[msg.sender] = contributors.length - 1;
         }
 
         // corresponding contribution of address is updated
@@ -88,6 +92,18 @@ contract CrowdFunding is BaseFunding {
     /// @return The contribution of the transaction's sender
     function checkSelfContribution() external view returns (uint256) {
         return contributionOf[msg.sender];
+    }
+
+    /// @notice Allows a person to check what contributor belongs to a certain address
+    /// @param  _address The address of the unknown contributor
+    /// @return The contributor at the specified address
+    function getContributorAt(address _address)
+        external
+        view
+        nonZero(contributionOf[_address])
+        returns (Contributor memory)
+    {
+        return contributors[contributorAt[_address]];
     }
 
     /// @notice Allows a person to retrieve their funds (completely or partially)
@@ -111,7 +127,7 @@ contract CrowdFunding is BaseFunding {
         }
         // Anyone that contributed can withdraw while in the Unfunded state
         else if (fundingStatus == Status.Unfunded) {
-            contributionOf[msg.sender] -= _amount; 
+            contributionOf[msg.sender] -= _amount;
             payable(msg.sender).transfer(_amount);
         }
         // Nobody can withdraw while in the Funded state
@@ -176,6 +192,7 @@ contract CrowdFunding is BaseFunding {
         // resets all existing contributions in the mapping to zero
         for (uint256 i = 0; i < length; i++) {
             contributionOf[contributors[i].sourceAddress] = 0;
+            contributorAt[contributors[i].sourceAddress] = 0;
         }
 
         // deletes the contributors array
